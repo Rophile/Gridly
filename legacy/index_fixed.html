@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver 16x16 & 25x25 - Optimized</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: 3px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .mode-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .sudoku-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .grid-wrapper {
+            display: inline-block;
+            border: 4px solid #333;
+            background: #333;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            gap: 0;
+            background: white;
+        }
+
+        .grid-16 {
+            grid-template-columns: repeat(16, 1fr);
+        }
+
+        .grid-25 {
+            grid-template-columns: repeat(25, 1fr);
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .cell-16 {
+            width: 35px;
+            font-size: 13px;
+        }
+
+        .cell-25 {
+            width: 26px;
+            font-size: 9px;
+        }
+
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-weight: bold;
+            background: transparent;
+            font-family: inherit;
+            padding: 2px;
+        }
+
+        .cell-16 input {
+            font-size: 13px;
+        }
+
+        .cell-25 input {
+            font-size: 9px;
+        }
+
+        .cell input:focus {
+            outline: 2px solid #667eea;
+            background: #f0f4ff;
+        }
+
+        .cell.given {
+            background: #e8f4f8;
+        }
+
+        .cell.solved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* Warna berbeda untuk setiap region 4x4 (16x16) */
+        .region-0-16 { background: #ffe6e6; }
+        .region-1-16 { background: #e6f3ff; }
+        .region-2-16 { background: #fff0e6; }
+        .region-3-16 { background: #e6ffe6; }
+        .region-4-16 { background: #f0e6ff; }
+        .region-5-16 { background: #ffffe6; }
+        .region-6-16 { background: #ffe6f0; }
+        .region-7-16 { background: #e6ffff; }
+        .region-8-16 { background: #fff0f0; }
+        .region-9-16 { background: #f0f0ff; }
+        .region-10-16 { background: #f0fff0; }
+        .region-11-16 { background: #fffef0; }
+        .region-12-16 { background: #ffe6fa; }
+        .region-13-16 { background: #e6fff5; }
+        .region-14-16 { background: #ffeee6; }
+        .region-15-16 { background: #f5e6ff; }
+
+        /* Warna berbeda untuk setiap region 5x5 (25x25) */
+        .region-0-25 { background: #ffe6e6; }
+        .region-1-25 { background: #e6f3ff; }
+        .region-2-25 { background: #fff0e6; }
+        .region-3-25 { background: #e6ffe6; }
+        .region-4-25 { background: #f0e6ff; }
+        .region-5-25 { background: #ffffe6; }
+        .region-6-25 { background: #ffe6f0; }
+        .region-7-25 { background: #e6ffff; }
+        .region-8-25 { background: #fff0f0; }
+        .region-9-25 { background: #f0f0ff; }
+        .region-10-25 { background: #f0fff0; }
+        .region-11-25 { background: #fffef0; }
+        .region-12-25 { background: #ffe6fa; }
+        .region-13-25 { background: #e6fff5; }
+        .region-14-25 { background: #ffeee6; }
+        .region-15-25 { background: #f5e6ff; }
+        .region-16-25 { background: #ffe6eb; }
+        .region-17-25 { background: #e6f0ff; }
+        .region-18-25 { background: #fff5e6; }
+        .region-19-25 { background: #ebffe6; }
+        .region-20-25 { background: #f5e6ff; }
+        .region-21-25 { background: #fffbe6; }
+        .region-22-25 { background: #ffe6ed; }
+        .region-23-25 { background: #e6fffb; }
+        .region-24-25 { background: #fff8f0; }
+
+        .cell.given {
+            font-weight: 900;
+        }
+
+        .cell.given input {
+            font-weight: 900;
+            color: #000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-solve {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-solve:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-example {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-example:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .result-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-panel.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        .progress-text {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Sudoku Solver Advanced</h1>
+        <p class="subtitle">Solver Optimized dengan MRV Heuristic untuk 16x16 dan 25x25</p>
+
+        <div class="info-box">
+            <strong>📝 Panduan Input:</strong><br>
+            • 16x16: Gunakan angka 1-9 dan huruf A-G (A=10, B=11, C=12, D=13, E=14, F=15, G=16)<br>
+            • 25x25: Gunakan angka 1-25 (angka 2 digit bisa diketik langsung, misal: 15, 20, 25)<br>
+            <strong>⚡ Optimasi:</strong> Menggunakan MRV Heuristic + Greedy + Backtracking untuk performa maksimal
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="switchMode(16)">16x16 Sudoku</button>
+            <button class="mode-btn" onclick="switchMode(25)">25x25 Sudoku</button>
+        </div>
+
+        <div class="sudoku-container">
+            <div class="grid-wrapper">
+                <div id="sudokuGrid" class="sudoku-grid grid-16"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-example" onclick="loadExample()">📝 Muat Contoh</button>
+            <button class="btn btn-solve" onclick="solveSudoku()">✨ Selesaikan</button>
+            <button class="btn btn-clear" onclick="clearGrid()">🗑️ Hapus Semua</button>
+        </div>
+
+        <div id="resultPanel" class="result-panel"></div>
+    </div>
+
+    <script>
+        let currentMode = 16;
+        let gridData = [];
+        let solveStartTime = 0;
+        let nodesExplored = 0;
+        let backtracks = 0;
+
+        // Advanced Sudoku Solver with MRV Heuristic
+        class SudokuSolver {
+            constructor(grid) {
+                this.grid = grid.map(row => [...row]);
+                this.size = grid.length;
+                this.blockSize = Math.sqrt(this.size);
+                this.nodesExplored = 0;
+                this.backtracks = 0;
+                
+                // Pre-compute candidates for all cells
+                this.candidates = Array(this.size).fill(null).map(() => 
+                    Array(this.size).fill(null).map(() => new Set())
+                );
+                this.initializeCandidates();
+            }
+
+            initializeCandidates() {
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (this.grid[row][col] === 0) {
+                            this.candidates[row][col] = this.getCandidates(row, col);
+                        }
+                    }
+                }
+            }
+
+            getCandidates(row, col) {
+                const candidates = new Set();
+                for (let num = 1; num <= this.size; num++) {
+                    if (this.isValid(row, col, num)) {
+                        candidates.add(num);
+                    }
+                }
+                return candidates;
+            }
+
+            isValid(row, col, num) {
+                // Check row
+                for (let x = 0; x < this.size; x++) {
+                    if (this.grid[row][x] === num) return false;
+                }
+
+                // Check column
+                for (let x = 0; x < this.size; x++) {
+                    if (this.grid[x][col] === num) return false;
+                }
+
+                // Check block
+                const startRow = Math.floor(row / this.blockSize) * this.blockSize;
+                const startCol = Math.floor(col / this.blockSize) * this.blockSize;
+                
+                for (let i = 0; i < this.blockSize; i++) {
+                    for (let j = 0; j < this.blockSize; j++) {
+                        if (this.grid[startRow + i][startCol + j] === num) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            findMRVCell() {
+                // Find cell with Minimum Remaining Values
+                let minCandidates = this.size + 1;
+                let bestCell = null;
+
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (this.grid[row][col] === 0) {
+                            const numCandidates = this.candidates[row][col].size;
+                            
+                            if (numCandidates === 0) {
+                                return null; // Dead end
+                            }
+                            
+                            if (numCandidates < minCandidates) {
+                                minCandidates = numCandidates;
+                                bestCell = [row, col];
+                                
+                                // Early termination for singleton
+                                if (minCandidates === 1) {
+                                    return bestCell;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return bestCell;
+            }
+
+            updateCandidates(row, col, num, remove = true) {
+                const startRow = Math.floor(row / this.blockSize) * this.blockSize;
+                const startCol = Math.floor(col / this.blockSize) * this.blockSize;
+
+                for (let i = 0; i < this.size; i++) {
+                    // Update baris
+                    if (this.grid[row][i] === 0) {
+                        if (remove) this.candidates[row][i].delete(num);
+                    }
+                    // Update kolom
+                    if (this.grid[i][col] === 0) {
+                        if (remove) this.candidates[i][col].delete(num);
+                    }
+                    // Update block
+                    const rB = startRow + Math.floor(i / this.blockSize);
+                    const cB = startCol + (i % this.blockSize);
+                    if (this.grid[rB][cB] === 0) {
+                        if (remove) this.candidates[rB][cB].delete(num);
+                    }
+                }
+            }       
+
+            takeSnapshot(row, col) {
+                const snapshot = [];
+                const startRow = Math.floor(row / this.blockSize) * this.blockSize;
+                const startCol = Math.floor(col / this.blockSize) * this.blockSize;
+
+                for (let i = 0; i < this.size; i++) {
+                    // Simpan salinan Set menggunakan 'new Set(...)'
+                    snapshot.push({r: row, c: i, data: new Set(this.candidates[row][i])});
+                    snapshot.push({r: i, c: col, data: new Set(this.candidates[i][col])});
+                    
+                    const rB = startRow + Math.floor(i / this.blockSize);
+                    const cB = startCol + (i % this.blockSize);
+                    snapshot.push({r: rB, c: cB, data: new Set(this.candidates[rB][cB])});
+                }
+                return snapshot;
+            }
+
+            restoreSnapshot(snapshot) {
+                for (const item of snapshot) {
+                    this.candidates[item.r][item.c] = item.data;
+                }
+            }            
+            
+            solve() {
+                this.nodeExplored++;
+                const cell = this.findMRVCell();
+
+                if (!cell) return true; // Solved
+
+                const [row, col] = cell;
+                const candidatesList = Array.from(this.candidates[row][col]);
+                for (const num of candidatesList) {
+                    this.grid[row][col] = num;
+
+                    const snapshot = this.takeSnapshot(row, col);
+
+                    this.updateCandidates(row, col, num, true);
+
+                    if (this.solve()) return true;
+                    
+                    this.backtracks++;
+                    this.grid[row][col] = 0;
+                    this.restoreSnapshot(snapshot);
+                }
+                return false
+            }
+            
+            getGrid() {
+                return this.grid;
+            }
+
+            getMetrics() {
+                return {
+                    nodesExplored: this.nodesExplored,
+                    backtracks: this.backtracks
+                };
+            }
+        }
+
+        function initGrid(size) {
+            currentMode = size;
+            const grid = document.getElementById('sudokuGrid');
+            grid.innerHTML = '';
+            grid.className = `sudoku-grid grid-${size}`;
+            gridData = Array(size).fill(null).map(() => Array(size).fill(0));
+
+            const blockSize = Math.sqrt(size);
+
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell cell-${size}`;
+                    
+                    const regionRow = Math.floor(row / blockSize);
+                    const regionCol = Math.floor(col / blockSize);
+                    const regionIndex = regionRow * blockSize + regionCol;
+                    cell.classList.add(`region-${regionIndex}-${size}`);
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = size === 16 ? 1 : 2;
+                    input.dataset.row = row;
+                    input.dataset.col = col;
+                    
+                    input.addEventListener('input', function(e) {
+                        let val = e.target.value.toUpperCase();
+                        
+                        if (size === 16) {
+                            if (!/^[1-9A-G]$/.test(val)) {
+                                e.target.value = '';
+                                return;
+                            }
+                        } else {
+                            if (val === '') {
+                                gridData[parseInt(e.target.dataset.row)][parseInt(e.target.dataset.col)] = 0;
+                                cell.classList.remove('given');
+                                return;
+                            }
+                            
+                            const num = parseInt(val);
+                            if (isNaN(num) || num < 1 || num > 25) {
+                                e.target.value = '';
+                                return;
+                            }
+                        }
+                        
+                        const row = parseInt(e.target.dataset.row);
+                        const col = parseInt(e.target.dataset.col);
+                        gridData[row][col] = val ? convertToNumber(val) : 0;
+                        
+                        if (val) {
+                            cell.classList.add('given');
+                        } else {
+                            cell.classList.remove('given');
+                        }
+                    });
+
+                    if (size === 25) {
+                        input.addEventListener('blur', function(e) {
+                            const val = e.target.value;
+                            if (val) {
+                                const num = parseInt(val);
+                                if (!isNaN(num) && num >= 1 && num <= 25) {
+                                    e.target.value = num.toString();
+                                } else {
+                                    e.target.value = '';
+                                    const row = parseInt(e.target.dataset.row);
+                                    const col = parseInt(e.target.dataset.col);
+                                    gridData[row][col] = 0;
+                                    cell.classList.remove('given');
+                                }
+                            }
+                        });
+                    }
+
+                    cell.appendChild(input);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function convertToNumber(val) {
+            if (typeof val === 'number') return val;
+            if (/^\d+$/.test(val)) return parseInt(val);
+            return val.charCodeAt(0) - 55;
+        }
+
+        function convertToChar(num, size) {
+            if (num === 0) return '';
+            if (size === 16 && num > 9) {
+                return String.fromCharCode(num + 55);
+            }
+            return num.toString();
+        }
+
+        function switchMode(size) {
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            initGrid(size);
+            document.getElementById('resultPanel').classList.remove('show');
+        }
+
+        function countFilledCells(grid) {
+            let count = 0;
+            for (let row of grid) {
+                for (let cell of row) {
+                    if (cell !== 0) count++;
+                }
+            }
+            return count;
+        }
+
+        function validateMinimumInputs() {
+            const filledCount = countFilledCells(gridData);
+            const minRequired = currentMode === 16 ? 16 : 25;
+            
+            if (filledCount < minRequired) {
+                showResult({
+                    success: false,
+                    message: `Minimal ${minRequired} sel harus diisi untuk Sudoku ${currentMode}x${currentMode}. Saat ini terisi: ${filledCount} sel.`
+                });
+                return false;
+            }
+            return true;
+        }
+
+        function solveSudoku() {
+            // 1. Pastikan gridData sinkron dengan input visual terbaru
+            const inputs = document.querySelectorAll('.cell input');
+            inputs.forEach(input => {
+                const r = parseInt(input.dataset.row);
+                const c = parseInt(input.dataset.col);
+                if (input.value !== "") {
+                    gridData[r][c] = convertToNumber(input.value);
+                } else {
+                    gridData[r][c] = 0;
+                }
+            });
+
+            if (!validateMinimumInputs()) return;
+
+            const resultPanel = document.getElementById('resultPanel');
+            resultPanel.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Memproses dengan algoritma optimized...<br>
+                    <div class="progress-text">Menggunakan MRV Heuristic + Constraint Propagation</div>
+                </div>
+            `;
+            resultPanel.classList.add('show');
+
+            // 2. Hitung angka awal yang benar-benar ada di grid sekarang
+            const originalFilled = countFilledCells(gridData);
+            const totalCells = currentMode * currentMode;
+            const gridCopy = gridData.map(row => [...row]);            
+
+            solveStartTime = performance.now();
+
+            // Use setTimeout to allow UI to update
+            setTimeout(() => {
+                const solver = new SudokuSolver(gridCopy);
+                const solved = solver.solve();
+                const solveTime = ((performance.now() - solveStartTime) / 1000).toFixed(3);
+                const metrics = solver.getMetrics();
+
+                if (solved) {
+                    const solution = solver.getGrid();
+                    
+                    // 3. Update UI with solution dan hitung selisih
+                    let actualSolveByAI = 0;
+                    inputs.forEach(input => {
+                        const row = parseInt(input.dataset.row);
+                        const col = parseInt(input.dataset.col);
+                        const originalValue = gridData[row][col];
+                        const solvedValue = solution[row][col];
+
+                        if (gridData[row][col] === 0 && solvedValue !== 0) {
+                            actualSolveByAI++;
+                            input.value = convertToChar(solvedValue, currentMode);
+                            input.parentElement.classList.add('solved');
+                        }
+                    });
+                    
+                    showResult({
+                        success: true,
+                        solveTime: solveTime,
+                        originalFilled: originalFilled,
+                        solvedCells: totalCells - originalFilled,
+                        totalCells: currentMode * currentMode,
+                        difficulty: calculateDifficulty(originalFilled, currentMode),
+                        nodesExplored: metrics.nodesExplored,
+                        backtracks: metrics.backtracks
+                    });
+                } else {
+                    showResult({
+                        success: false,
+                        message: 'Tidak dapat menemukan solusi. Pastikan input sudoku valid dan dapat diselesaikan.'
+                    });
+                }
+            }, 100);
+        }
+
+        function calculateDifficulty(filledCells, size) {
+            const totalCells = size * size;
+            const fillPercentage = (filledCells / totalCells) * 100;
+            
+            if (fillPercentage >= 50) return 'Mudah ⭐';
+            if (fillPercentage >= 35) return 'Sedang ⭐⭐';
+            if (fillPercentage >= 25) return 'Sulit ⭐⭐⭐';
+            return 'Sangat Sulit ⭐⭐⭐⭐';
+        }
+
+        function showResult(data) {
+            const panel = document.getElementById('resultPanel');
+            
+            if (data.success) {
+                const efficiency = data.solvedCells > 0 ? 
+                    ((data.solvedCells / data.nodesExplored) * 100).toFixed(2) : 0;
+                
+                panel.innerHTML = `
+                    <h2>📊 Hasil Analisis</h2>
+                    <div class="status-message status-success">
+                        ✅ Sudoku berhasil diselesaikan!
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">⏱️ Waktu Penyelesaian</div>
+                            <div class="stat-value">${data.solveTime}s</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">📝 Sel Awal Terisi</div>
+                            <div class="stat-value">${data.originalFilled}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">✅ Sel Diselesaikan</div>
+                            <div class="stat-value">${data.solvedCells}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">📊 Total Sel</div>
+                            <div class="stat-value">${data.totalCells}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">🎯 Tingkat Kesulitan</div>
+                            <div class="stat-value">${data.difficulty}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">📈 Persentase Terisi</div>
+                            <div class="stat-value">${((data.originalFilled/data.totalCells)*100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">🔍 Node Eksplorasi</div>
+                            <div class="stat-value">${data.nodesExplored.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">🔄 Backtracks</div>
+                            <div class="stat-value">${data.backtracks.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">⚡ Efisiensi Heuristic</div>
+                            <div class="stat-value">${efficiency}%</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <h2>⚠️ Hasil Analisis</h2>
+                    <div class="status-message status-error">
+                        ${data.message}
+                    </div>
+                `;
+            }
+            
+            panel.classList.add('show');
+        }
+
+        function clearGrid() {
+            const cells = document.querySelectorAll('.cell input');
+            cells.forEach(input => {
+                input.value = '';
+                input.parentElement.classList.remove('given', 'solved');
+            });
+            gridData = Array(currentMode).fill(null).map(() => Array(currentMode).fill(0));
+            document.getElementById('resultPanel').classList.remove('show');
+        }
+
+        function loadExample() {
+            clearGrid();
+            
+            if (currentMode === 16) {
+                const example = [
+                    [1, 0, 0, 0, 5, 0, 0, 0, 9, 0, 0, 0, 13, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16],
+                    [0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0]
+                ];
+                
+                loadGridData(example);
+            } else {
+                const example = Array(25).fill(null).map(() => Array(25).fill(0));
+                
+                // Diagonal + strategic extras for faster solve
+                for (let i = 0; i < 25; i++) {
+                    example[i][i] = i + 1;
+                }
+                
+                // Add strategic clues in each 5x5 block
+                const extras = [
+                    [0, 5, 6], [5, 0, 1], [10, 15, 16], [15, 10, 11], [20, 24, 25],
+                    [2, 7, 8], [7, 2, 3], [12, 17, 18], [17, 12, 13], [22, 3, 4],
+                    [1, 6, 7], [6, 1, 2], [11, 16, 17], [16, 11, 12], [21, 23, 24],
+                    [3, 8, 9], [8, 3, 4], [13, 18, 19], [18, 13, 14], [23, 4, 5],
+                    [4, 9, 10], [9, 4, 5]
+                ];
+                
+                for (const [r, c, v] of extras) {
+                    if (example[r][c] === 0) {
+                        example[r][c] = v;
+                    }
+                }
+                
+                loadGridData(example);
+            }
+        }
+
+        function loadGridData(data) {
+            const cells = document.querySelectorAll('.cell input');
+            cells.forEach(input => {
+                const row = parseInt(input.dataset.row);
+                const col = parseInt(input.dataset.col);
+                const value = data[row][col];
+                
+                if (value !== 0) {
+                    input.value = convertToChar(value, currentMode);
+                    input.parentElement.classList.add('given');
+                    gridData[row][col] = value;
+                }
+            });
+        }
+
+        // Initialize with 16x16
+        initGrid(16);
+    </script>
+</body>
+</html>
