@@ -147,19 +147,103 @@ class SudokuHybridSolver:
 
 # --- STREAMLIT UI ---
 def main():
-    st.set_page_config(page_title="Hybrid Sudoku Solver (MRV+LCV+BT)", layout="wide", page_icon="🧩")
+    st.set_page_config(page_title="Gridly - Modern Sudoku", layout="wide", page_icon="🧩")
     
+    # Custom CSS for Gridly's unique visual identity
     st.markdown("""
         <style>
-        .main { background-color: #f8f9fa; }
-        .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #4CAF50; color: white; font-weight: bold; }
-        .stMetric { background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; text-align: center; }
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap');
+        
+        * { font-family: 'Nunito', sans-serif; }
+        
+        .main { background-color: #fdfaff; }
+        
+        /* Pastel Color Palette */
+        :root {
+            --amethyst: #9956DE;
+            --slate-blue: #7274ED;
+            --summer-sky: #1FA7E1;
+            --downy: #6ED1CF;
+            --pastel-green: #75D06A;
+            --texas-rose: #FFB356;
+            --mona-lisa: #FF8B8B;
+            --illusion: #FB96BB;
+        }
+
+        .stButton>button { 
+            width: 100%; 
+            border-radius: 12px; 
+            height: 3.5em; 
+            background: linear-gradient(135deg, #9956DE, #7274ED); 
+            color: white; 
+            font-weight: 800; 
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(114, 116, 237, 0.3);
+        }
+        .stButton>button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(114, 116, 237, 0.4);
+            color: white;
+        }
+        
+        .header-text { 
+            color: #9956DE; 
+            text-align: center; 
+            font-weight: 900; 
+            font-size: 3.5rem;
+            margin-bottom: 0; 
+            letter-spacing: -1px;
+        }
+        .sub-text { 
+            color: #7274ED; 
+            text-align: center; 
+            font-weight: 600; 
+            margin-top: 0; 
+            margin-bottom: 2.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .intro-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 20px; 
+            border: 1px solid #f0f0f0;
+        }
+        
+        .highlight-box {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-weight: 800;
+            color: white;
+            margin: 5px;
+        }
+        
+        /* Custom styles for metrics and inputs */
+        .stMetric { background-color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #eee; }
+        div[data-testid="stExpander"] { border-radius: 15px; border: 1px solid #eee; background: white; }
         </style>
     """, unsafe_allow_html=True)
     
-    st.title("🧩 Hybrid Sudoku Solver")
-    st.markdown("### Menggunakan MRV, LCV, dan Backtracking dengan Heuristik")
+    st.markdown("<h1 class='header-text'>Gridly</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-text'>Fresh • Engaging • Analytical</p>", unsafe_allow_html=True)
+
+    with st.expander("✨ Discover Gridly", expanded=True):
+        st.markdown(f"""
+        <div class='intro-card'>
+            <p><strong>Gridly</strong> is a modern Sudoku puzzle application designed to provide a fresh and engaging brain-training experience through advanced grid sizes such as <strong>16x16 and 25x25</strong>. Unlike traditional Sudoku games, Gridly combines challenging logic-based gameplay with a colorful and minimalist interface, making complex puzzles feel more interactive and enjoyable for users.</p>
+            <p>The application helps improve concentration, analytical thinking, and problem-solving skills while maintaining a relaxing and visually appealing atmosphere. Featuring multiple Sudoku modes with automatically generated boards, Gridly includes real-time answer validation, advanced heuristics, and gameplay statistics to enhance your experience.</p>
+            <div style='text-align: center; margin-top: 20px;'>
+                <span class='highlight-box' style='background-color: #9956DE;'>9x9 Standard</span>
+                <span class='highlight-box' style='background-color: #7274ED;'>16x16 Pro</span>
+                <span class='highlight-box' style='background-color: #1FA7E1;'>25x25 Elite</span>
+                <span class='highlight-box' style='background-color: #75D06A;'>Hybrid AI</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Sidebar
     st.sidebar.header("⚙️ Konfigurasi")
