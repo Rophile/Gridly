@@ -288,6 +288,19 @@ def show_play():
     if st.session_state.current_grid is None:
         st.info("Select parameters and generate a puzzle to begin.")
     else:
+        with st.expander("ℹ️ ATURAN & PETUNJUK", expanded=False):
+            st.markdown("""
+            **Aturan Dasar Sudoku:**
+            - **Baris:** Tidak boleh ada angka yang sama dalam satu baris horizontal.
+            - **Kolom:** Tidak boleh ada angka yang sama dalam satu kolom vertikal.
+            - **Blok (Sub-grid):** Tidak boleh ada angka yang sama dalam satu kotak blok (misal 3x3 atau 4x4).
+            
+            **Cara Bermain:**
+            - Klik pada kotak untuk memasukkan angka (1 hingga dimensi grid).
+            - Angka **0** berarti kotak kosong.
+            - Gunakan tombol **Verify Solution** di bawah untuk mengecek hasil akhir Anda.
+            """)
+        
         st.write(f"**Session:** {st.session_state.difficulty} | **Grid:** {st.session_state.grid_size}x{st.session_state.grid_size}")
         
         # Simplified Input System
@@ -332,6 +345,17 @@ def show_solve():
         st.divider()
         size = st.selectbox("Grid Dimensions", [9, 16, 25], index=1)
         mode = st.radio("Processing Mode", ["Instant", "Step-by-Step"])
+
+    with st.expander("ℹ️ PETUNJUK INPUT AI", expanded=False):
+        st.markdown("""
+        **Cara Menggunakan AI Solver:**
+        1. **Input Grid:** Masukkan angka-angka yang sudah diketahui pada grid di bawah.
+        2. **Validasi Aturan:** Pastikan tidak ada angka yang sama dalam satu baris, kolom, atau blok sebelum memulai.
+        3. **Mode Instant:** AI akan langsung memberikan solusi akhir.
+        4. **Mode Step-by-Step:** Lihat bagaimana AI bekerja dan melakukan *backtracking* secara visual.
+        
+        *Catatan: Gunakan angka **0** atau kosongkan sel untuk kotak yang belum terisi.*
+        """)
 
     st.write("### Input Matrix")
     st.session_state.solve_grid = unified_arcade_grid(st.session_state.solve_grid if 'solve_grid' in st.session_state and len(st.session_state.solve_grid) == size else [[0]*size for _ in range(size)], size, "solve_input")
@@ -417,6 +441,23 @@ def show_about():
     Gridly adalah platform logika premium yang dirancang untuk menyelesaikan teka-teki Sudoku kompleks. 
     Mendukung berbagai ukuran grid mulai dari standar 9x9 hingga 25x25 yang menantang.
 
+    ### 🧠 Teknologi Solver Hybrid
+    Aplikasi ini menggunakan pendekatan **Hybrid Algorithm** yang menggabungkan:
+    1.  **Backtracking Search**: Menjamin penemuan solusi jika solusi tersebut ada.
+    2.  **MRV (Minimum Remaining Values) Heuristic**: Mempercepat pencarian dengan memilih sel yang memiliki kemungkinan angka paling sedikit terlebih dahulu.
+
+    #### Perbandingan Algoritma:
+    | Algoritma | Kecepatan | Efisiensi Memori | Kompleksitas Grid |
+    | :--- | :--- | :--- | :--- |
+    | Brute Force | Sangat Lambat | Tinggi | Rendah (9x9 saja) |
+    | Standard Backtracking | Sedang | Rendah | Menengah (16x16) |
+    | **Hybrid (MRV + Backtracking)** | **Sangat Cepat** | **Sangat Rendah** | **Tinggi (Hingga 25x25+)** |
+
+    #### Keunggulan Solver Ini:
+    - **Pruning Efisien**: Mengurangi jutaan langkah pencarian yang tidak perlu.
+    - **Adaptif**: Performa tetap stabil meskipun pada tingkat kesulitan "Extreme".
+    - **Visualisasi Real-time**: Anda dapat melihat bagaimana algoritma membuat keputusan dan melakukan *backtracking* saat terjadi kebuntuan.
+
     ### 📖 Cara Penggunaan
     1. **Play Session**: 
        - Pilih dimensi grid dan tingkat kesulitan.
@@ -431,7 +472,7 @@ def show_about():
     4. **Settings**: 
        - Sesuaikan preferensi visual dan interaksi aplikasi.
 
-    ### 🛠️ Teknologi
+    ### 🛠️ Teknologi Internal
     Dibangun dengan **Python** menggunakan framework **Streamlit** untuk antarmuka yang responsif dan **Plotly** untuk visualisasi data analitik.
     """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
