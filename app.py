@@ -256,6 +256,7 @@ def show_landing():
         if st.button("🤖 AI ASSISTANT", key="btn_solve", use_container_width=True): nav_to("Solve")
         if st.button("📊 ANALYTICS", key="btn_analysis", use_container_width=True): nav_to("Analysis")
         if st.button("⚙️ PREFERENCES", key="btn_settings", use_container_width=True): nav_to("Settings")
+        if st.button("ℹ️ ABOUT & HELP", key="btn_about", use_container_width=True): nav_to("About")
         st.markdown("</div>", unsafe_allow_html=True)
 
 # --- UNIFIED ARCADE GRID COMPONENT ---
@@ -405,6 +406,36 @@ def show_settings():
     st.color_picker("Accent Color", "#667eea")
     st.markdown("</div>", unsafe_allow_html=True)
 
+def show_about():
+    st.markdown("<h1 class='main-header' style='font-size:2.5rem;'>About & Help</h1>", unsafe_allow_html=True)
+    if st.button("🏠 HUB", key="btn_about_back"):
+        nav_to("Landing")
+    
+    st.markdown("<div class='premium-card'>", unsafe_allow_html=True)
+    st.markdown("""
+    ### 🧩 Apa itu Gridly?
+    Gridly adalah platform logika premium yang dirancang untuk menyelesaikan teka-teki Sudoku kompleks. 
+    Mendukung berbagai ukuran grid mulai dari standar 9x9 hingga 25x25 yang menantang.
+
+    ### 📖 Cara Penggunaan
+    1. **Play Session**: 
+       - Pilih dimensi grid dan tingkat kesulitan.
+       - Isi angka pada kotak yang kosong.
+       - Gunakan tombol **Verify Solution** untuk mengecek kebenaran jawabanmu.
+    2. **AI Assistant**: 
+       - Masukkan angka pada grid yang ingin diselesaikan.
+       - Pilih mode **Instant** untuk hasil cepat atau **Step-by-Step** untuk melihat proses berpikir AI.
+       - Klik **Initiate Solver** untuk memulai.
+    3. **Analytics**: 
+       - Pantau performa AI dan kompleksitas grid yang telah diselesaikan.
+    4. **Settings**: 
+       - Sesuaikan preferensi visual dan interaksi aplikasi.
+
+    ### 🛠️ Teknologi
+    Dibangun dengan **Python** menggunakan framework **Streamlit** untuk antarmuka yang responsif dan **Plotly** untuk visualisasi data analitik.
+    """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # --- APP ROUTER ---
 if st.session_state.page == "Landing":
     show_landing()
@@ -416,6 +447,8 @@ elif st.session_state.page == "Analysis":
     show_analysis()
 elif st.session_state.page == "Settings":
     show_settings()
+elif st.session_state.page == "About":
+    show_about()
 
 # --- FOOTER ---
 st.divider()
